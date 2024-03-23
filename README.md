@@ -37,4 +37,33 @@ In our initial development phase, SkillsterAI concentrates on sports, dance, yog
 5. Refine and Iterate: Based on testing feedback, the capsule is refined. This may involve adjustments to models, enhancements to the user experience, or debugging of the code.
 
 6. Publish the Capsule: Once the capsule is deemed ready, it can be published to the Bixby Marketplace, allowing others to utilize it.
+
+Initial opening page:
+
+   <img width="300" alt="Screenshot 2024-03-23 at 7 43 40 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/9cd86c95-73a5-4d7e-97de-192d86ce6dfa">
+
+Select your hobby:
+
+   <img width="300" alt="Screenshot 2024-03-23 at 7 43 55 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/3fd0834f-a6fa-4f27-8826-0eea6b132ba3">
    
+
+ Select the pose you want to practice:
+ 
+   <img width="300" alt="Screenshot 2024-03-23 at 7 44 03 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/253ba2a5-9952-49c4-b172-b313c1f64862">
+
+   Attempt 1
+   
+<img width="300" alt="Screenshot 2024-03-23 at 7 44 21 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/ff10d323-c30c-40bd-b281-f943eb17c6e2">
+
+Attempt 2
+
+
+<img width="300" alt="Screenshot 2024-03-23 at 7 44 27 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/7fea99b8-ec74-4330-b144-2d63d2cc3779">
+
+Attempt 3
+
+<img width="300" alt="Screenshot 2024-03-23 at 7 44 39 PM" src="https://github.com/Sahnaaz/SkillsterAI/assets/152959675/f935350e-2a8a-4ecb-8fe3-d404dbdbef01">
+
+
+
+

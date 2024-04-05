@@ -1,0 +1,23 @@
+const
+{GoogleGenerativeAI} = require( '@google/generative-ai')
+const
+fs= require( 'fs')
+const
+genAI= new GoogleGenerativeAI("AIzaSyAD_Rs1TtH5fpjVxakZECZ6-4KwL8-LD3A" )
+const model =genAI.getGenerativeModel({model: "gemini-pro"})
+function fileToGenerativePart(path, mimeType){
+return{
+inlineData: {
+data: Buffer. from(fs.readFileSync(path)).toString ('base64'),
+mimeType
+async function run(){
+const model =genAI.getGenerativeModel({model: "gemini-pro-vision"})
+const prompt ="Whats different between these videos? What is happening in both?"
+const videoParts = [
+fileToGenerativePart("img2.jpeg", "image/jpeg"),
+fileToGenerativePart("img1.jpeg", "image/jpeg"),
+const result= await model.generateContent([prompt, ...videoParts])
+const response= await result.response const text=response.text)
+console. log (text)
+}
+run ()

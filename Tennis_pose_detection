@@ -1,0 +1,455 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyM9dn9lvnefW17pRZB2Cpml",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Sahnaaz/SkillsterAI/blob/main/Tennis_pose_detection\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install mediapipe opencv-python-headless scikit-learn\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "collapsed": true,
+        "id": "g2BMnzQxdqdH",
+        "outputId": "7b7b478b-3b3d-43d0-dd65-5db8f55909d6"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Collecting mediapipe\n",
+            "  Downloading mediapipe-0.10.20-cp310-cp310-manylinux_2_28_x86_64.whl.metadata (9.7 kB)\n",
+            "Requirement already satisfied: opencv-python-headless in /usr/local/lib/python3.10/dist-packages (4.10.0.84)\n",
+            "Requirement already satisfied: scikit-learn in /usr/local/lib/python3.10/dist-packages (1.6.0)\n",
+            "Requirement already satisfied: absl-py in /usr/local/lib/python3.10/dist-packages (from mediapipe) (1.4.0)\n",
+            "Requirement already satisfied: attrs>=19.1.0 in /usr/local/lib/python3.10/dist-packages (from mediapipe) (24.3.0)\n",
+            "Requirement already satisfied: flatbuffers>=2.0 in /usr/local/lib/python3.10/dist-packages (from mediapipe) (24.3.25)\n",
+            "Requirement already satisfied: jax in /usr/local/lib/python3.10/dist-packages (from mediapipe) (0.4.33)\n",
+            "Requirement already satisfied: jaxlib in /usr/local/lib/python3.10/dist-packages (from mediapipe) (0.4.33)\n",
+            "Requirement already satisfied: matplotlib in /usr/local/lib/python3.10/dist-packages (from mediapipe) (3.8.0)\n",
+            "Requirement already satisfied: numpy<2 in /usr/local/lib/python3.10/dist-packages (from mediapipe) (1.26.4)\n",
+            "Requirement already satisfied: opencv-contrib-python in /usr/local/lib/python3.10/dist-packages (from mediapipe) (4.10.0.84)\n",
+            "Requirement already satisfied: protobuf<5,>=4.25.3 in /usr/local/lib/python3.10/dist-packages (from mediapipe) (4.25.5)\n",
+            "Collecting sounddevice>=0.4.4 (from mediapipe)\n",
+            "  Downloading sounddevice-0.5.1-py3-none-any.whl.metadata (1.4 kB)\n",
+            "Requirement already satisfied: sentencepiece in /usr/local/lib/python3.10/dist-packages (from mediapipe) (0.2.0)\n",
+            "Requirement already satisfied: scipy>=1.6.0 in /usr/local/lib/python3.10/dist-packages (from scikit-learn) (1.13.1)\n",
+            "Requirement already satisfied: joblib>=1.2.0 in /usr/local/lib/python3.10/dist-packages (from scikit-learn) (1.4.2)\n",
+            "Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.10/dist-packages (from scikit-learn) (3.5.0)\n",
+            "Requirement already satisfied: CFFI>=1.0 in /usr/local/lib/python3.10/dist-packages (from sounddevice>=0.4.4->mediapipe) (1.17.1)\n",
+            "Requirement already satisfied: ml-dtypes>=0.2.0 in /usr/local/lib/python3.10/dist-packages (from jax->mediapipe) (0.4.1)\n",
+            "Requirement already satisfied: opt-einsum in /usr/local/lib/python3.10/dist-packages (from jax->mediapipe) (3.4.0)\n",
+            "Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (1.3.1)\n",
+            "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (0.12.1)\n",
+            "Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (4.55.3)\n",
+            "Requirement already satisfied: kiwisolver>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (1.4.7)\n",
+            "Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (24.2)\n",
+            "Requirement already satisfied: pillow>=6.2.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (11.0.0)\n",
+            "Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (3.2.0)\n",
+            "Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.10/dist-packages (from matplotlib->mediapipe) (2.8.2)\n",
+            "Requirement already satisfied: pycparser in /usr/local/lib/python3.10/dist-packages (from CFFI>=1.0->sounddevice>=0.4.4->mediapipe) (2.22)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.7->matplotlib->mediapipe) (1.17.0)\n",
+            "Downloading mediapipe-0.10.20-cp310-cp310-manylinux_2_28_x86_64.whl (35.6 MB)\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m35.6/35.6 MB\u001b[0m \u001b[31m29.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hDownloading sounddevice-0.5.1-py3-none-any.whl (32 kB)\n",
+            "Installing collected packages: sounddevice, mediapipe\n",
+            "Successfully installed mediapipe-0.10.20 sounddevice-0.5.1\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "import cv2\n",
+        "import json\n",
+        "import numpy as np\n",
+        "import tensorflow as tf\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
+        "from tensorflow.keras import layers, models\n",
+        "from tensorflow.keras.callbacks import EarlyStopping\n",
+        "\n",
+        "# Define the paths\n",
+        "image_dir = '/content/dataset/images'\n",
+        "annotation_dir = '/content/dataset/annotations'\n",
+        "\n",
+        "# Load the annotations\n",
+        "def load_annotations(annotation_dir):\n",
+        "    annotations = {}\n",
+        "    for file in os.listdir(annotation_dir):\n",
+        "        if file.endswith('.json'):\n",
+        "            with open(os.path.join(annotation_dir, file)) as f:\n",
+        "                annotations[file.split('.')[0]] = json.load(f)\n",
+        "    return annotations\n",
+        "\n",
+        "annotations = load_annotations(annotation_dir)\n",
+        "\n",
+        "# Load images and corresponding labels\n",
+        "def load_images_and_labels(image_dir, annotations):\n",
+        "    images = []\n",
+        "    labels = []\n",
+        "    moves = ['backhand', 'forehand', 'ready_position', 'serve']\n",
+        "    label_map = {'backhand': 0, 'forehand': 1, 'ready_position': 2, 'serve': 3}\n",
+        "\n",
+        "    for move in moves:\n",
+        "        move_dir = os.path.join(image_dir, move)\n",
+        "        for img_name in os.listdir(move_dir):\n",
+        "            if img_name.endswith('.jpeg') or img_name.endswith('.png'):\n",
+        "                img_path = os.path.join(move_dir, img_name)\n",
+        "                image = cv2.imread(img_path)\n",
+        "                if image is not None:  # Ensure image is loaded correctly\n",
+        "                    image = cv2.resize(image, (224, 224))  # Resize image to 224x224 for CNN input\n",
+        "                    images.append(image)\n",
+        "                    labels.append(label_map[move])\n",
+        "    images = np.array(images)\n",
+        "    labels = np.array(labels)\n",
+        "    return images, labels\n",
+        "\n",
+        "images, labels = load_images_and_labels(image_dir, annotations)\n",
+        "\n",
+        "# Check if images are loaded\n",
+        "print(f\"Loaded {len(images)} images\")\n",
+        "\n",
+        "# Check if any images were loaded\n",
+        "if len(images) == 0:\n",
+        "    raise ValueError(\"No images found in the specified directory. Please check the image paths.\")\n",
+        "\n",
+        "# Normalize the images\n",
+        "images = images / 255.0  # Normalize the images\n",
+        "labels = tf.keras.utils.to_categorical(labels, num_classes=4)  # One-hot encode labels\n",
+        "\n",
+        "# Split the data into training and validation sets\n",
+        "X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=42)\n",
+        "\n",
+        "# Create a CNN model\n",
+        "def create_model():\n",
+        "    model = models.Sequential([\n",
+        "        layers.InputLayer(input_shape=(224, 224, 3)),\n",
+        "        layers.Conv2D(32, (3, 3), activation='relu', padding='same'),\n",
+        "        layers.MaxPooling2D((2, 2)),\n",
+        "        layers.Conv2D(64, (3, 3), activation='relu', padding='same'),\n",
+        "        layers.MaxPooling2D((2, 2)),\n",
+        "        layers.Conv2D(128, (3, 3), activation='relu', padding='same'),\n",
+        "        layers.MaxPooling2D((2, 2)),\n",
+        "        layers.Flatten(),\n",
+        "        layers.Dense(128, activation='relu'),\n",
+        "        layers.Dense(4, activation='softmax')  # 4 classes for different tennis moves\n",
+        "    ])\n",
+        "    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])\n",
+        "    return model\n",
+        "\n",
+        "model = create_model()\n",
+        "\n",
+        "# Data augmentation for better generalization\n",
+        "datagen = ImageDataGenerator(\n",
+        "    rotation_range=30,\n",
+        "    width_shift_range=0.2,\n",
+        "    height_shift_range=0.2,\n",
+        "    shear_range=0.2,\n",
+        "    zoom_range=0.2,\n",
+        "    horizontal_flip=True,\n",
+        "    fill_mode='nearest'\n",
+        ")\n",
+        "\n",
+        "datagen.fit(X_train)\n",
+        "\n",
+        "# Train the model with early stopping\n",
+        "early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)\n",
+        "\n",
+        "history = model.fit(datagen.flow(X_train, y_train, batch_size=32),\n",
+        "                    epochs=50,\n",
+        "                    validation_data=(X_val, y_val),\n",
+        "                    callbacks=[early_stopping])\n",
+        "\n",
+        "# Save the model\n",
+        "model.save('/content/tennis_move_model.h5')\n",
+        "\n",
+        "# Evaluate the model\n",
+        "test_loss, test_acc = model.evaluate(X_val, y_val)\n",
+        "print(f\"Test Accuracy: {test_acc * 100:.2f}%\")\n",
+        "\n",
+        "# Function to make predictions on new images\n",
+        "def predict_move(image_path):\n",
+        "    image = cv2.imread(image_path)\n",
+        "    image = cv2.resize(image, (224, 224))  # Resize to match model input\n",
+        "    image = image / 255.0  # Normalize the image\n",
+        "    image = np.expand_dims(image, axis=0)  # Add batch dimension\n",
+        "    prediction = model.predict(image)\n",
+        "    predicted_class = np.argmax(prediction)\n",
+        "    classes = ['backhand', 'forehand', 'ready_position', 'serve']\n",
+        "    return classes[predicted_class]\n",
+        "\n",
+        "# Example usage for prediction\n",
+        "test_image = '/content/dataset/images/front-end/test_image.jpeg'\n",
+        "predicted_move = predict_move(test_image)\n",
+        "print(f\"Predicted Move: {predicted_move}\")\n",
+        "\n",
+        "\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "XKlu_vvHk74n",
+        "outputId": "96c119c4-659d-431c-be6d-ee32c9165287"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "metadata": {
+            "tags": null
+          },
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Loaded 2000 images\n"
+          ]
+        },
+        {
+          "metadata": {
+            "tags": null
+          },
+          "name": "stderr",
+          "output_type": "stream",
+          "text": [
+            "/usr/local/lib/python3.10/dist-packages/keras/src/layers/core/input_layer.py:26: UserWarning: Argument `input_shape` is deprecated. Use `shape` instead.\n",
+            "  warnings.warn(\n"
+          ]
+        },
+        {
+          "metadata": {
+            "tags": null
+          },
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Epoch 1/50\n"
+          ]
+        },
+        {
+          "metadata": {
+            "tags": null
+          },
+          "name": "stderr",
+          "output_type": "stream",
+          "text": [
+            "/usr/local/lib/python3.10/dist-packages/keras/src/trainers/data_adapters/py_dataset_adapter.py:122: UserWarning: Your `PyDataset` class should call `super().__init__(**kwargs)` in its constructor. `**kwargs` can include `workers`, `use_multiprocessing`, `max_queue_size`. Do not pass these arguments to `fit()`, as they will be ignored.\n",
+            "  self._warn_if_super_not_called()\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m223s\u001b[0m 4s/step - accuracy: 0.3027 - loss: 2.6130 - val_accuracy: 0.3800 - val_loss: 1.2325\n",
+            "Epoch 2/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m255s\u001b[0m 4s/step - accuracy: 0.3475 - loss: 1.2448 - val_accuracy: 0.3650 - val_loss: 1.2296\n",
+            "Epoch 3/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m212s\u001b[0m 4s/step - accuracy: 0.3633 - loss: 1.2411 - val_accuracy: 0.3825 - val_loss: 1.2214\n",
+            "Epoch 4/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m226s\u001b[0m 4s/step - accuracy: 0.3807 - loss: 1.2121 - val_accuracy: 0.3925 - val_loss: 1.2093\n",
+            "Epoch 5/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m213s\u001b[0m 4s/step - accuracy: 0.3996 - loss: 1.2071 - val_accuracy: 0.4050 - val_loss: 1.2196\n",
+            "Epoch 6/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m274s\u001b[0m 4s/step - accuracy: 0.4234 - loss: 1.1956 - val_accuracy: 0.4200 - val_loss: 1.2022\n",
+            "Epoch 7/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m250s\u001b[0m 4s/step - accuracy: 0.3814 - loss: 1.2219 - val_accuracy: 0.4025 - val_loss: 1.2015\n",
+            "Epoch 8/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m213s\u001b[0m 4s/step - accuracy: 0.4071 - loss: 1.1985 - val_accuracy: 0.4075 - val_loss: 1.1997\n",
+            "Epoch 9/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m260s\u001b[0m 4s/step - accuracy: 0.4066 - loss: 1.2105 - val_accuracy: 0.4275 - val_loss: 1.1928\n",
+            "Epoch 10/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m219s\u001b[0m 4s/step - accuracy: 0.4194 - loss: 1.1997 - val_accuracy: 0.4300 - val_loss: 1.2123\n",
+            "Epoch 11/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m212s\u001b[0m 4s/step - accuracy: 0.4419 - loss: 1.1719 - val_accuracy: 0.4325 - val_loss: 1.1886\n",
+            "Epoch 12/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m262s\u001b[0m 4s/step - accuracy: 0.4286 - loss: 1.1698 - val_accuracy: 0.3950 - val_loss: 1.1816\n",
+            "Epoch 13/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m212s\u001b[0m 4s/step - accuracy: 0.4244 - loss: 1.1604 - val_accuracy: 0.4450 - val_loss: 1.1851\n",
+            "Epoch 14/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m268s\u001b[0m 4s/step - accuracy: 0.4341 - loss: 1.1853 - val_accuracy: 0.4650 - val_loss: 1.1644\n",
+            "Epoch 15/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m210s\u001b[0m 4s/step - accuracy: 0.4738 - loss: 1.1603 - val_accuracy: 0.4400 - val_loss: 1.1708\n",
+            "Epoch 16/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m265s\u001b[0m 4s/step - accuracy: 0.4683 - loss: 1.1416 - val_accuracy: 0.4850 - val_loss: 1.1144\n",
+            "Epoch 17/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m259s\u001b[0m 4s/step - accuracy: 0.4657 - loss: 1.1298 - val_accuracy: 0.5550 - val_loss: 1.0784\n",
+            "Epoch 18/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m211s\u001b[0m 4s/step - accuracy: 0.5095 - loss: 1.0705 - val_accuracy: 0.5325 - val_loss: 1.0387\n",
+            "Epoch 19/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m209s\u001b[0m 4s/step - accuracy: 0.5090 - loss: 1.0977 - val_accuracy: 0.5625 - val_loss: 1.0116\n",
+            "Epoch 20/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m209s\u001b[0m 4s/step - accuracy: 0.5297 - loss: 1.0592 - val_accuracy: 0.5950 - val_loss: 0.9074\n",
+            "Epoch 21/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m209s\u001b[0m 4s/step - accuracy: 0.5309 - loss: 1.0304 - val_accuracy: 0.6200 - val_loss: 0.9274\n",
+            "Epoch 22/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m262s\u001b[0m 4s/step - accuracy: 0.5483 - loss: 1.0178 - val_accuracy: 0.5975 - val_loss: 0.9078\n",
+            "Epoch 23/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m210s\u001b[0m 4s/step - accuracy: 0.5392 - loss: 1.0229 - val_accuracy: 0.6150 - val_loss: 0.8910\n",
+            "Epoch 24/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m213s\u001b[0m 4s/step - accuracy: 0.5687 - loss: 0.9858 - val_accuracy: 0.6700 - val_loss: 0.8631\n",
+            "Epoch 25/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m267s\u001b[0m 4s/step - accuracy: 0.5619 - loss: 0.9958 - val_accuracy: 0.6800 - val_loss: 0.8302\n",
+            "Epoch 26/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m209s\u001b[0m 4s/step - accuracy: 0.5656 - loss: 0.9673 - val_accuracy: 0.6375 - val_loss: 0.8587\n",
+            "Epoch 27/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m262s\u001b[0m 4s/step - accuracy: 0.5710 - loss: 0.9476 - val_accuracy: 0.6500 - val_loss: 0.8349\n",
+            "Epoch 28/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m208s\u001b[0m 4s/step - accuracy: 0.5750 - loss: 0.9584 - val_accuracy: 0.6875 - val_loss: 0.7944\n",
+            "Epoch 29/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m263s\u001b[0m 4s/step - accuracy: 0.5796 - loss: 0.9303 - val_accuracy: 0.6350 - val_loss: 0.8212\n",
+            "Epoch 30/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m210s\u001b[0m 4s/step - accuracy: 0.6011 - loss: 0.9114 - val_accuracy: 0.6475 - val_loss: 0.8056\n",
+            "Epoch 31/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m208s\u001b[0m 4s/step - accuracy: 0.6194 - loss: 0.8668 - val_accuracy: 0.6375 - val_loss: 0.7966\n",
+            "Epoch 32/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m212s\u001b[0m 4s/step - accuracy: 0.6153 - loss: 0.8618 - val_accuracy: 0.6425 - val_loss: 0.8073\n",
+            "Epoch 33/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m210s\u001b[0m 4s/step - accuracy: 0.6268 - loss: 0.8525 - val_accuracy: 0.6500 - val_loss: 0.7830\n",
+            "Epoch 34/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m217s\u001b[0m 4s/step - accuracy: 0.6010 - loss: 0.8578 - val_accuracy: 0.7025 - val_loss: 0.6914\n",
+            "Epoch 35/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m256s\u001b[0m 4s/step - accuracy: 0.6358 - loss: 0.8354 - val_accuracy: 0.7275 - val_loss: 0.6445\n",
+            "Epoch 36/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m260s\u001b[0m 4s/step - accuracy: 0.6462 - loss: 0.7895 - val_accuracy: 0.6700 - val_loss: 0.6979\n",
+            "Epoch 37/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m216s\u001b[0m 4s/step - accuracy: 0.6317 - loss: 0.7896 - val_accuracy: 0.6750 - val_loss: 0.6844\n",
+            "Epoch 38/50\n",
+            "\u001b[1m50/50\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m257s\u001b[0m 4s/step - accuracy: 0.6261 - loss: 0.8221 - val_accuracy: 0.6925 - val_loss: 0.6610\n",
+            "Epoch 39/50\n",
+            "\u001b[1m28/50\u001b[0m \u001b[32m━━━━━━━━━━━\u001b[0m\u001b[37m━━━━━━━━━\u001b[0m \u001b[1m1:26\u001b[0m 4s/step - accuracy: 0.6226 - loss: 0.7960"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.save('/content/drive/MyDrive/tennis_move_model.keras')\n",
+        "import pickle\n",
+        "with open('/content/drive/MyDrive/training_history.pkl', 'wb') as f:\n",
+        "    pickle.dump(history.history, f)\n"
+      ],
+      "metadata": {
+        "id": "GFt2TppnL7Qb"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "\n",
+        "image_dir = '/content/dataset/images'\n",
+        "moves = ['backhand', 'forehand', 'ready_position', 'serve']\n",
+        "\n",
+        "for move in moves:\n",
+        "    move_dir = os.path.join(image_dir, move)\n",
+        "    print(f\"Files in {move_dir}: {os.listdir(move_dir)}\")\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IQVLtTMsmZ3y",
+        "outputId": "72a1750f-0414-4d33-db06-9040c0268fcd"
+      },
+      "execution_count": 19,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Files in /content/dataset/images/backhand: ['B_467.jpeg', 'B_392.jpeg', 'B_016.jpeg', 'B_055.jpeg', 'B_420.jpeg', 'B_153.jpeg', 'B_258.jpeg', 'B_462.jpeg', 'B_347.jpeg', 'B_013.jpeg', 'B_385.jpeg', 'B_043.jpeg', 'B_493.jpeg', 'B_371.jpeg', 'B_059.jpeg', 'B_318.jpeg', 'B_220.jpeg', 'B_379.jpeg', 'B_069.jpeg', 'B_265.jpeg', 'B_089.jpeg', 'B_150.jpeg', 'B_490.jpeg', 'B_355.jpeg', 'B_004.jpeg', 'B_155.jpeg', 'B_294.jpeg', 'B_060.jpeg', 'B_283.jpeg', 'B_404.jpeg', 'B_414.jpeg', 'B_325.jpeg', 'B_231.jpeg', 'B_117.jpeg', 'B_163.jpeg', 'B_005.jpeg', 'B_186.jpeg', 'B_021.jpeg', 'B_151.jpeg', 'B_118.jpeg', 'B_189.jpeg', 'B_301.jpeg', 'B_436.jpeg', 'B_020.jpeg', 'B_135.jpeg', 'B_247.jpeg', 'B_182.jpeg', 'B_304.jpeg', 'B_236.jpeg', 'B_240.jpeg', 'B_197.jpeg', 'B_269.jpeg', 'B_417.jpeg', 'B_378.jpeg', 'B_312.jpeg', 'B_111.jpeg', 'B_450.jpeg', 'B_211.jpeg', 'B_062.jpeg', 'B_254.jpeg', 'B_192.jpeg', 'B_362.jpeg', 'B_074.jpeg', 'B_200.jpeg', 'B_096.jpeg', 'B_025.jpeg', 'B_268.jpeg', 'B_103.jpeg', 'B_156.jpeg', 'B_310.jpeg', 'B_146.jpeg', 'B_437.jpeg', 'B_145.jpeg', 'B_426.jpeg', 'B_174.jpeg', 'B_188.jpeg', 'B_214.jpeg', 'B_006.jpeg', 'B_298.jpeg', 'B_063.jpeg', 'B_003.jpeg', 'B_207.jpeg', 'B_345.jpeg', 'B_109.jpeg', 'B_464.jpeg', 'B_222.jpeg', 'B_029.jpeg', 'B_428.jpeg', 'B_218.jpeg', 'B_141.jpeg', 'B_028.jpeg', 'B_024.jpeg', 'B_185.jpeg', 'B_476.jpeg', 'B_259.jpeg', 'B_084.jpeg', 'B_142.jpeg', 'B_421.jpeg', 'B_132.jpeg', 'B_488.jpeg', 'B_195.jpeg', 'B_473.jpeg', 'B_245.jpeg', 'B_431.jpeg', 'B_045.jpeg', 'B_302.jpeg', 'B_334.jpeg', 'B_391.jpeg', 'B_451.jpeg', 'B_183.jpeg', 'B_073.jpeg', 'B_366.jpeg', 'B_071.jpeg', 'B_353.jpeg', 'B_270.jpeg', 'B_122.jpeg', 'B_364.jpeg', 'B_115.jpeg', 'B_235.jpeg', 'B_147.jpeg', 'B_468.jpeg', 'B_085.jpeg', 'B_033.jpeg', 'B_286.jpeg', 'B_313.jpeg', 'B_459.jpeg', 'B_279.jpeg', 'B_246.jpeg', 'B_380.jpeg', 'B_167.jpeg', 'B_152.jpeg', 'B_401.jpeg', 'B_068.jpeg', 'B_291.jpeg', 'B_461.jpeg', 'B_356.jpeg', 'B_088.jpeg', 'B_093.jpeg', 'B_435.jpeg', 'B_443.jpeg', 'B_465.jpeg', 'B_374.jpeg', 'B_050.jpeg', 'B_125.jpeg', 'B_487.jpeg', 'B_344.jpeg', 'B_445.jpeg', 'B_224.jpeg', 'B_100.jpeg', 'B_432.jpeg', 'B_413.jpeg', 'B_474.jpeg', 'B_350.jpeg', 'B_212.jpeg', 'B_359.jpeg', 'B_338.jpeg', 'B_191.jpeg', 'B_140.jpeg', 'B_307.jpeg', 'B_295.jpeg', 'B_475.jpeg', 'B_161.jpeg', 'B_448.jpeg', 'B_248.jpeg', 'B_331.jpeg', 'B_036.jpeg', 'B_400.jpeg', 'B_099.jpeg', 'B_405.jpeg', 'B_351.jpeg', 'B_369.jpeg', 'B_368.jpeg', 'B_052.jpeg', 'B_288.jpeg', 'B_026.jpeg', 'B_375.jpeg', 'B_458.jpeg', 'B_339.jpeg', 'B_463.jpeg', 'B_447.jpeg', 'B_317.jpeg', 'B_388.jpeg', 'B_500.jpeg', 'B_409.jpeg', 'B_277.jpeg', 'B_251.jpeg', 'B_419.jpeg', 'B_172.jpeg', 'B_165.jpeg', 'B_320.jpeg', 'B_234.jpeg', 'B_280.jpeg', 'B_423.jpeg', 'B_095.jpeg', 'B_051.jpeg', 'B_023.jpeg', 'B_040.jpeg', 'B_398.jpeg', 'B_007.jpeg', 'B_210.jpeg', 'B_337.jpeg', 'B_094.jpeg', 'B_373.jpeg', 'B_352.jpeg', 'B_078.jpeg', 'B_349.jpeg', 'B_311.jpeg', 'B_080.jpeg', 'B_327.jpeg', 'B_427.jpeg', 'B_415.jpeg', 'B_425.jpeg', 'B_127.jpeg', 'B_121.jpeg', 'B_162.jpeg', 'B_299.jpeg', 'B_322.jpeg', 'B_168.jpeg', 'B_480.jpeg', 'B_333.jpeg', 'B_144.jpeg', 'B_108.jpeg', 'B_403.jpeg', 'B_303.jpeg', 'B_457.jpeg', 'B_486.jpeg', 'B_216.jpeg', 'B_471.jpeg', 'B_157.jpeg', 'B_252.jpeg', 'B_018.jpeg', 'B_412.jpeg', 'B_031.jpeg', 'B_215.jpeg', 'B_399.jpeg', 'B_105.jpeg', 'B_070.jpeg', 'B_365.jpeg', 'B_499.jpeg', 'B_090.jpeg', 'B_107.jpeg', 'B_058.jpeg', 'B_208.jpeg', 'B_330.jpeg', 'B_452.jpeg', 'B_015.jpeg', 'B_193.jpeg', 'B_184.jpeg', 'B_326.jpeg', 'B_227.jpeg', 'B_232.jpeg', 'B_128.jpeg', 'B_267.jpeg', 'B_466.jpeg', 'B_075.jpeg', 'B_407.jpeg', 'B_434.jpeg', 'B_384.jpeg', 'B_367.jpeg', 'B_086.jpeg', 'B_164.jpeg', 'B_264.jpeg', 'B_342.jpeg', 'B_178.jpeg', 'B_361.jpeg', 'B_203.jpeg', 'B_175.jpeg', 'B_492.jpeg', 'B_229.jpeg', 'B_440.jpeg', 'B_296.jpeg', 'B_396.jpeg', 'B_110.jpeg', 'B_129.jpeg', 'B_206.jpeg', 'B_053.jpeg', 'B_293.jpeg', 'B_179.jpeg', 'B_176.jpeg', 'B_119.jpeg', 'B_376.jpeg', 'B_256.jpeg', 'B_037.jpeg', 'B_019.jpeg', 'B_196.jpeg', 'B_181.jpeg', 'B_039.jpeg', 'B_199.jpeg', 'B_328.jpeg', 'B_124.jpeg', 'B_324.jpeg', 'B_148.jpeg', 'B_112.jpeg', 'B_131.jpeg', 'B_120.jpeg', 'B_271.jpeg', 'B_101.jpeg', 'B_383.jpeg', 'B_022.jpeg', 'B_287.jpeg', 'B_335.jpeg', 'B_173.jpeg', 'B_290.jpeg', 'B_282.jpeg', 'B_387.jpeg', 'B_154.jpeg', 'B_250.jpeg', 'B_054.jpeg', 'B_213.jpeg', 'B_470.jpeg', 'B_305.jpeg', 'B_323.jpeg', 'B_498.jpeg', 'B_316.jpeg', 'B_309.jpeg', 'B_057.jpeg', 'B_158.jpeg', 'B_377.jpeg', 'B_381.jpeg', 'B_418.jpeg', 'B_257.jpeg', 'B_079.jpeg', 'B_072.jpeg', 'B_382.jpeg', 'B_460.jpeg', 'B_177.jpeg', 'B_484.jpeg', 'B_390.jpeg', 'B_017.jpeg', 'B_092.jpeg', 'B_209.jpeg', 'B_123.jpeg', 'B_044.jpeg', 'B_292.jpeg', 'B_289.jpeg', 'B_402.jpeg', 'B_027.jpeg', 'B_046.jpeg', 'B_314.jpeg', 'B_008.jpeg', 'B_226.jpeg', 'B_035.jpeg', 'B_479.jpeg', 'B_308.jpeg', 'B_260.jpeg', 'B_139.jpeg', 'B_237.jpeg', 'B_358.jpeg', 'B_194.jpeg', 'B_454.jpeg', 'B_042.jpeg', 'B_424.jpeg', 'B_238.jpeg', 'B_064.jpeg', 'B_489.jpeg', 'B_097.jpeg', 'B_315.jpeg', 'B_284.jpeg', 'B_066.jpeg', 'B_225.jpeg', 'B_439.jpeg', 'B_160.jpeg', 'B_253.jpeg', 'B_169.jpeg', 'B_010.jpeg', 'B_242.jpeg', 'B_410.jpeg', 'B_076.jpeg', 'B_395.jpeg', 'B_363.jpeg', 'B_411.jpeg', 'B_048.jpeg', 'B_497.jpeg', 'B_104.jpeg', 'B_494.jpeg', 'B_491.jpeg', 'B_098.jpeg', 'B_273.jpeg', 'B_038.jpeg', 'B_278.jpeg', 'B_281.jpeg', 'B_429.jpeg', 'B_190.jpeg', 'B_221.jpeg', 'B_360.jpeg', 'B_389.jpeg', 'B_138.jpeg', 'B_446.jpeg', 'B_495.jpeg', 'B_217.jpeg', 'B_394.jpeg', 'B_442.jpeg', 'B_456.jpeg', 'B_285.jpeg', 'B_106.jpeg', 'B_136.jpeg', 'B_357.jpeg', 'B_406.jpeg', 'B_034.jpeg', 'B_180.jpeg', 'B_453.jpeg', 'B_477.jpeg', 'B_481.jpeg', 'B_444.jpeg', 'B_485.jpeg', 'B_049.jpeg', 'B_341.jpeg', 'B_297.jpeg', 'B_261.jpeg', 'B_348.jpeg', 'B_056.jpeg', 'B_300.jpeg', 'B_081.jpeg', 'B_354.jpeg', 'B_266.jpeg', 'B_126.jpeg', 'B_433.jpeg', 'B_272.jpeg', 'B_276.jpeg', 'B_014.jpeg', 'B_263.jpeg', 'B_137.jpeg', 'B_408.jpeg', 'B_083.jpeg', 'B_114.jpeg', 'B_370.jpeg', 'B_002.jpeg', 'B_202.jpeg', 'B_441.jpeg', 'B_159.jpeg', 'B_397.jpeg', 'B_219.jpeg', 'B_306.jpeg', 'B_065.jpeg', 'B_230.jpeg', 'B_483.jpeg', 'B_187.jpeg', 'B_082.jpeg', 'B_233.jpeg', 'B_113.jpeg', 'B_386.jpeg', 'B_319.jpeg', 'B_001.jpeg', 'B_243.jpeg', 'B_275.jpeg', 'B_249.jpeg', 'B_255.jpeg', 'B_201.jpeg', 'B_346.jpeg', 'B_116.jpeg', 'B_469.jpeg', 'B_336.jpeg', 'B_204.jpeg', 'B_130.jpeg', 'B_067.jpeg', 'B_041.jpeg', 'B_032.jpeg', 'B_496.jpeg', 'B_030.jpeg', 'B_332.jpeg', 'B_009.jpeg', 'B_321.jpeg', 'B_422.jpeg', 'B_262.jpeg', 'B_102.jpeg', 'B_011.jpeg', 'B_171.jpeg', 'B_087.jpeg', 'B_329.jpeg', 'B_143.jpeg', 'B_198.jpeg', 'B_133.jpeg', 'B_091.jpeg', 'B_012.jpeg', 'B_393.jpeg', 'B_244.jpeg', 'B_340.jpeg', 'B_205.jpeg', 'B_343.jpeg', 'B_170.jpeg', 'B_077.jpeg', 'B_438.jpeg', 'B_047.jpeg', 'B_134.jpeg', 'B_274.jpeg', 'B_241.jpeg', 'B_239.jpeg', 'B_149.jpeg', 'B_166.jpeg', 'B_061.jpeg', 'B_482.jpeg', 'B_472.jpeg', 'B_449.jpeg', 'B_228.jpeg', 'B_416.jpeg', 'B_455.jpeg', 'B_223.jpeg', 'B_430.jpeg', 'B_372.jpeg', 'B_478.jpeg']\n",
+            "Files in /content/dataset/images/forehand: ['F_118.jpeg', 'F_299.jpeg', 'F_150.jpeg', 'F_193.jpeg', 'F_277.jpeg', 'F_249.jpeg', 'F_090.jpeg', 'F_354.jpeg', 'F_497.jpeg', 'F_412.jpeg', 'F_403.jpeg', 'F_457.jpeg', 'F_365.jpeg', 'F_023.jpeg', 'F_192.jpeg', 'F_106.jpeg', 'F_273.jpeg', 'F_392.jpeg', 'F_500.jpeg', 'F_033.jpeg', 'F_326.jpeg', 'F_016.jpeg', 'F_054.jpeg', 'F_368.jpeg', 'F_107.jpeg', 'F_278.jpeg', 'F_345.jpeg', 'F_175.jpeg', 'F_236.jpeg', 'F_097.jpeg', 'F_432.jpeg', 'F_244.jpeg', 'F_191.jpeg', 'F_079.jpeg', 'F_168.jpeg', 'F_279.jpeg', 'F_430.jpeg', 'F_357.jpeg', 'F_291.jpeg', 'F_102.jpeg', 'F_444.jpeg', 'F_300.jpeg', 'F_288.jpeg', 'F_034.jpeg', 'F_117.jpeg', 'F_350.jpeg', 'F_210.jpeg', 'F_138.jpeg', 'F_462.jpeg', 'F_439.jpeg', 'F_039.jpeg', 'F_472.jpeg', 'F_027.jpeg', 'F_324.jpeg', 'F_247.jpeg', 'F_306.jpeg', 'F_270.jpeg', 'F_146.jpeg', 'F_329.jpeg', 'F_315.jpeg', 'F_076.jpeg', 'F_415.jpeg', 'F_188.jpeg', 'F_308.jpeg', 'F_195.jpeg', 'F_093.jpeg', 'F_040.jpeg', 'F_492.jpeg', 'F_265.jpeg', 'F_228.jpeg', 'F_465.jpeg', 'F_064.jpeg', 'F_066.jpeg', 'F_203.jpeg', 'F_111.jpeg', 'F_053.jpeg', 'F_355.jpeg', 'F_395.jpeg', 'F_450.jpeg', 'F_380.jpeg', 'F_149.jpeg', 'F_057.jpeg', 'F_031.jpeg', 'F_269.jpeg', 'F_339.jpeg', 'F_209.jpeg', 'F_276.jpeg', 'F_001.jpeg', 'F_114.jpeg', 'F_358.jpeg', 'F_385.jpeg', 'F_487.jpeg', 'F_153.jpeg', 'F_231.jpeg', 'F_147.jpeg', 'F_272.jpeg', 'F_341.jpeg', 'F_295.jpeg', 'F_124.jpeg', 'F_446.jpeg', 'F_281.jpeg', 'F_080.jpeg', 'F_143.jpeg', 'F_020.jpeg', 'F_003.jpeg', 'F_011.jpeg', 'F_170.jpeg', 'F_159.jpeg', 'F_391.jpeg', 'F_297.jpeg', 'F_409.jpeg', 'F_237.jpeg', 'F_133.jpeg', 'F_285.jpeg', 'F_067.jpeg', 'F_455.jpeg', 'F_442.jpeg', 'F_058.jpeg', 'F_172.jpeg', 'F_070.jpeg', 'F_225.jpeg', 'F_340.jpeg', 'F_098.jpeg', 'F_165.jpeg', 'F_301.jpeg', 'F_383.jpeg', 'F_294.jpeg', 'F_197.jpeg', 'F_495.jpeg', 'F_394.jpeg', 'F_413.jpeg', 'F_074.jpeg', 'F_223.jpeg', 'F_458.jpeg', 'F_336.jpeg', 'F_434.jpeg', 'F_042.jpeg', 'F_438.jpeg', 'F_182.jpeg', 'F_028.jpeg', 'F_157.jpeg', 'F_389.jpeg', 'F_180.jpeg', 'F_259.jpeg', 'F_155.jpeg', 'F_178.jpeg', 'F_437.jpeg', 'F_401.jpeg', 'F_366.jpeg', 'F_242.jpeg', 'F_030.jpeg', 'F_163.jpeg', 'F_261.jpeg', 'F_230.jpeg', 'F_024.jpeg', 'F_100.jpeg', 'F_088.jpeg', 'F_424.jpeg', 'F_094.jpeg', 'F_171.jpeg', 'F_084.jpeg', 'F_491.jpeg', 'F_312.jpeg', 'F_130.jpeg', 'F_262.jpeg', 'F_222.jpeg', 'F_453.jpeg', 'F_443.jpeg', 'F_445.jpeg', 'F_018.jpeg', 'F_212.jpeg', 'F_013.jpeg', 'F_275.jpeg', 'F_189.jpeg', 'F_199.jpeg', 'F_059.jpeg', 'F_371.jpeg', 'F_240.jpeg', 'F_061.jpeg', 'F_091.jpeg', 'F_046.jpeg', 'F_176.jpeg', 'F_095.jpeg', 'F_226.jpeg', 'F_302.jpeg', 'F_161.jpeg', 'F_370.jpeg', 'F_260.jpeg', 'F_318.jpeg', 'F_362.jpeg', 'F_460.jpeg', 'F_397.jpeg', 'F_400.jpeg', 'F_477.jpeg', 'F_072.jpeg', 'F_045.jpeg', 'F_123.jpeg', 'F_071.jpeg', 'F_379.jpeg', 'F_378.jpeg', 'F_120.jpeg', 'F_038.jpeg', 'F_151.jpeg', 'F_078.jpeg', 'F_217.jpeg', 'F_144.jpeg', 'F_374.jpeg', 'F_112.jpeg', 'F_311.jpeg', 'F_250.jpeg', 'F_419.jpeg', 'F_160.jpeg', 'F_181.jpeg', 'F_404.jpeg', 'F_375.jpeg', 'F_206.jpeg', 'F_002.jpeg', 'F_154.jpeg', 'F_449.jpeg', 'F_360.jpeg', 'F_044.jpeg', 'F_416.jpeg', 'F_121.jpeg', 'F_166.jpeg', 'F_139.jpeg', 'F_486.jpeg', 'F_145.jpeg', 'F_407.jpeg', 'F_293.jpeg', 'F_425.jpeg', 'F_377.jpeg', 'F_405.jpeg', 'F_467.jpeg', 'F_283.jpeg', 'F_081.jpeg', 'F_417.jpeg', 'F_198.jpeg', 'F_214.jpeg', 'F_221.jpeg', 'F_323.jpeg', 'F_342.jpeg', 'F_426.jpeg', 'F_219.jpeg', 'F_184.jpeg', 'F_063.jpeg', 'F_116.jpeg', 'F_399.jpeg', 'F_488.jpeg', 'F_052.jpeg', 'F_233.jpeg', 'F_211.jpeg', 'F_007.jpeg', 'F_152.jpeg', 'F_332.jpeg', 'F_280.jpeg', 'F_200.jpeg', 'F_322.jpeg', 'F_201.jpeg', 'F_049.jpeg', 'F_347.jpeg', 'F_103.jpeg', 'F_264.jpeg', 'F_047.jpeg', 'F_344.jpeg', 'F_077.jpeg', 'F_029.jpeg', 'F_048.jpeg', 'F_190.jpeg', 'F_414.jpeg', 'F_478.jpeg', 'F_421.jpeg', 'F_428.jpeg', 'F_246.jpeg', 'F_194.jpeg', 'F_041.jpeg', 'F_017.jpeg', 'F_073.jpeg', 'F_012.jpeg', 'F_461.jpeg', 'F_470.jpeg', 'F_207.jpeg', 'F_055.jpeg', 'F_319.jpeg', 'F_402.jpeg', 'F_060.jpeg', 'F_092.jpeg', 'F_108.jpeg', 'F_456.jpeg', 'F_364.jpeg', 'F_065.jpeg', 'F_140.jpeg', 'F_274.jpeg', 'F_481.jpeg', 'F_187.jpeg', 'F_032.jpeg', 'F_490.jpeg', 'F_087.jpeg', 'F_056.jpeg', 'F_408.jpeg', 'F_287.jpeg', 'F_243.jpeg', 'F_257.jpeg', 'F_185.jpeg', 'F_224.jpeg', 'F_062.jpeg', 'F_289.jpeg', 'F_263.jpeg', 'F_101.jpeg', 'F_202.jpeg', 'F_321.jpeg', 'F_429.jpeg', 'F_009.jpeg', 'F_316.jpeg', 'F_127.jpeg', 'F_183.jpeg', 'F_148.jpeg', 'F_459.jpeg', 'F_043.jpeg', 'F_382.jpeg', 'F_451.jpeg', 'F_386.jpeg', 'F_109.jpeg', 'F_473.jpeg', 'F_393.jpeg', 'F_372.jpeg', 'F_119.jpeg', 'F_254.jpeg', 'F_015.jpeg', 'F_085.jpeg', 'F_099.jpeg', 'F_363.jpeg', 'F_179.jpeg', 'F_474.jpeg', 'F_310.jpeg', 'F_248.jpeg', 'F_348.jpeg', 'F_025.jpeg', 'F_320.jpeg', 'F_069.jpeg', 'F_352.jpeg', 'F_010.jpeg', 'F_441.jpeg', 'F_435.jpeg', 'F_266.jpeg', 'F_427.jpeg', 'F_252.jpeg', 'F_082.jpeg', 'F_142.jpeg', 'F_489.jpeg', 'F_334.jpeg', 'F_390.jpeg', 'F_343.jpeg', 'F_136.jpeg', 'F_304.jpeg', 'F_169.jpeg', 'F_468.jpeg', 'F_494.jpeg', 'F_232.jpeg', 'F_431.jpeg', 'F_333.jpeg', 'F_051.jpeg', 'F_436.jpeg', 'F_213.jpeg', 'F_162.jpeg', 'F_037.jpeg', 'F_022.jpeg', 'F_353.jpeg', 'F_137.jpeg', 'F_075.jpeg', 'F_122.jpeg', 'F_384.jpeg', 'F_292.jpeg', 'F_132.jpeg', 'F_452.jpeg', 'F_083.jpeg', 'F_410.jpeg', 'F_396.jpeg', 'F_485.jpeg', 'F_177.jpeg', 'F_482.jpeg', 'F_314.jpeg', 'F_325.jpeg', 'F_330.jpeg', 'F_035.jpeg', 'F_475.jpeg', 'F_328.jpeg', 'F_381.jpeg', 'F_255.jpeg', 'F_158.jpeg', 'F_227.jpeg', 'F_284.jpeg', 'F_346.jpeg', 'F_050.jpeg', 'F_406.jpeg', 'F_496.jpeg', 'F_258.jpeg', 'F_420.jpeg', 'F_008.jpeg', 'F_359.jpeg', 'F_105.jpeg', 'F_096.jpeg', 'F_141.jpeg', 'F_480.jpeg', 'F_303.jpeg', 'F_479.jpeg', 'F_448.jpeg', 'F_469.jpeg', 'F_216.jpeg', 'F_235.jpeg', 'F_019.jpeg', 'F_234.jpeg', 'F_471.jpeg', 'F_134.jpeg', 'F_021.jpeg', 'F_298.jpeg', 'F_005.jpeg', 'F_229.jpeg', 'F_196.jpeg', 'F_156.jpeg', 'F_466.jpeg', 'F_245.jpeg', 'F_499.jpeg', 'F_086.jpeg', 'F_307.jpeg', 'F_113.jpeg', 'F_463.jpeg', 'F_296.jpeg', 'F_089.jpeg', 'F_498.jpeg', 'F_251.jpeg', 'F_014.jpeg', 'F_110.jpeg', 'F_331.jpeg', 'F_454.jpeg', 'F_271.jpeg', 'F_282.jpeg', 'F_422.jpeg', 'F_447.jpeg', 'F_115.jpeg', 'F_026.jpeg', 'F_186.jpeg', 'F_398.jpeg', 'F_205.jpeg', 'F_313.jpeg', 'F_126.jpeg', 'F_327.jpeg', 'F_361.jpeg', 'F_418.jpeg', 'F_433.jpeg', 'F_493.jpeg', 'F_129.jpeg', 'F_208.jpeg', 'F_268.jpeg', 'F_373.jpeg', 'F_464.jpeg', 'F_338.jpeg', 'F_267.jpeg', 'F_423.jpeg', 'F_369.jpeg', 'F_476.jpeg', 'F_241.jpeg', 'F_337.jpeg', 'F_440.jpeg', 'F_218.jpeg', 'F_335.jpeg', 'F_167.jpeg', 'F_204.jpeg', 'F_135.jpeg', 'F_220.jpeg', 'F_305.jpeg', 'F_239.jpeg', 'F_173.jpeg', 'F_349.jpeg', 'F_351.jpeg', 'F_215.jpeg', 'F_125.jpeg', 'F_253.jpeg', 'F_256.jpeg', 'F_104.jpeg', 'F_068.jpeg', 'F_286.jpeg', 'F_309.jpeg', 'F_290.jpeg', 'F_367.jpeg', 'F_036.jpeg', 'F_376.jpeg', 'F_317.jpeg', 'F_387.jpeg', 'F_483.jpeg', 'F_131.jpeg', 'F_484.jpeg', 'F_411.jpeg', 'F_238.jpeg', 'F_004.jpeg', 'F_174.jpeg', 'F_388.jpeg', 'F_128.jpeg', 'F_164.jpeg', 'F_006.jpeg', 'F_356.jpeg']\n",
+            "Files in /content/dataset/images/ready_position: ['R_308.jpeg', 'R_422.jpeg', 'R_381.jpeg', 'R_373.jpeg', 'R_011.jpeg', 'R_040.jpeg', 'R_223.jpeg', 'R_083.jpeg', 'R_458.jpeg', 'R_234.jpeg', 'R_330.jpeg', 'R_209.jpeg', 'R_136.jpeg', 'R_193.jpeg', 'R_069.jpeg', 'R_350.jpeg', 'R_434.jpeg', 'R_122.jpeg', 'R_015.jpeg', 'R_158.jpeg', 'R_199.jpeg', 'R_279.jpeg', 'R_006.jpeg', 'R_393.jpeg', 'R_445.jpeg', 'R_218.jpeg', 'R_206.jpeg', 'R_157.jpeg', 'R_367.jpeg', 'R_159.jpeg', 'R_161.jpeg', 'R_415.jpeg', 'R_264.jpeg', 'R_471.jpeg', 'R_341.jpeg', 'R_115.jpeg', 'R_454.jpeg', 'R_026.jpeg', 'R_406.jpeg', 'R_386.jpeg', 'R_073.jpeg', 'R_369.jpeg', 'R_272.jpeg', 'R_419.jpeg', 'R_248.jpeg', 'R_048.jpeg', 'R_095.jpeg', 'R_292.jpeg', 'R_420.jpeg', 'R_057.jpeg', 'R_440.jpeg', 'R_423.jpeg', 'R_496.jpeg', 'R_004.jpeg', 'R_278.jpeg', 'R_462.jpeg', 'R_469.jpeg', 'R_450.jpeg', 'R_384.jpeg', 'R_174.jpeg', 'R_182.jpeg', 'R_005.jpeg', 'R_399.jpeg', 'R_414.jpeg', 'R_293.jpeg', 'R_476.jpeg', 'R_266.jpeg', 'R_456.jpeg', 'R_141.jpeg', 'R_362.jpeg', 'R_361.jpeg', 'R_459.jpeg', 'R_375.jpeg', 'R_126.jpeg', 'R_086.jpeg', 'R_117.jpeg', 'R_175.jpeg', 'R_370.jpeg', 'R_242.jpeg', 'R_453.jpeg', 'R_257.jpeg', 'R_491.jpeg', 'R_230.jpeg', 'R_030.jpeg', 'R_250.jpeg', 'R_183.jpeg', 'R_062.jpeg', 'R_302.jpeg', 'R_090.jpeg', 'R_295.jpeg', 'R_326.jpeg', 'R_403.jpeg', 'R_221.jpeg', 'R_283.jpeg', 'R_318.jpeg', 'R_437.jpeg', 'R_108.jpeg', 'R_156.jpeg', 'R_028.jpeg', 'R_470.jpeg', 'R_208.jpeg', 'R_179.jpeg', 'R_261.jpeg', 'R_299.jpeg', 'R_352.jpeg', 'R_487.jpeg', 'R_411.jpeg', 'R_080.jpeg', 'R_226.jpeg', 'R_489.jpeg', 'R_346.jpeg', 'R_323.jpeg', 'R_446.jpeg', 'R_315.jpeg', 'R_374.jpeg', 'R_152.jpeg', 'R_478.jpeg', 'R_032.jpeg', 'R_114.jpeg', 'R_401.jpeg', 'R_328.jpeg', 'R_289.jpeg', 'R_191.jpeg', 'R_150.jpeg', 'R_344.jpeg', 'R_078.jpeg', 'R_254.jpeg', 'R_212.jpeg', 'R_088.jpeg', 'R_027.jpeg', 'R_337.jpeg', 'R_416.jpeg', 'R_438.jpeg', 'R_395.jpeg', 'R_145.jpeg', 'R_430.jpeg', 'R_493.jpeg', 'R_353.jpeg', 'R_213.jpeg', 'R_201.jpeg', 'R_087.jpeg', 'R_265.jpeg', 'R_324.jpeg', 'R_133.jpeg', 'R_421.jpeg', 'R_012.jpeg', 'R_194.jpeg', 'R_049.jpeg', 'R_351.jpeg', 'R_268.jpeg', 'R_339.jpeg', 'R_070.jpeg', 'R_348.jpeg', 'R_096.jpeg', 'R_146.jpeg', 'R_396.jpeg', 'R_322.jpeg', 'R_277.jpeg', 'R_461.jpeg', 'R_247.jpeg', 'R_017.jpeg', 'R_135.jpeg', 'R_177.jpeg', 'R_285.jpeg', 'R_228.jpeg', 'R_166.jpeg', 'R_407.jpeg', 'R_109.jpeg', 'R_366.jpeg', 'R_303.jpeg', 'R_473.jpeg', 'R_093.jpeg', 'R_451.jpeg', 'R_197.jpeg', 'R_494.jpeg', 'R_267.jpeg', 'R_172.jpeg', 'R_137.jpeg', 'R_439.jpeg', 'R_127.jpeg', 'R_113.jpeg', 'R_468.jpeg', 'R_376.jpeg', 'R_255.jpeg', 'R_368.jpeg', 'R_187.jpeg', 'R_334.jpeg', 'R_138.jpeg', 'R_325.jpeg', 'R_116.jpeg', 'R_363.jpeg', 'R_256.jpeg', 'R_472.jpeg', 'R_081.jpeg', 'R_358.jpeg', 'R_378.jpeg', 'R_297.jpeg', 'R_338.jpeg', 'R_101.jpeg', 'R_143.jpeg', 'R_020.jpeg', 'R_388.jpeg', 'R_432.jpeg', 'R_269.jpeg', 'R_252.jpeg', 'R_321.jpeg', 'R_475.jpeg', 'R_477.jpeg', 'R_203.jpeg', 'R_412.jpeg', 'R_154.jpeg', 'R_331.jpeg', 'R_008.jpeg', 'R_160.jpeg', 'R_130.jpeg', 'R_066.jpeg', 'R_178.jpeg', 'R_239.jpeg', 'R_151.jpeg', 'R_009.jpeg', 'R_019.jpeg', 'R_021.jpeg', 'R_041.jpeg', 'R_170.jpeg', 'R_479.jpeg', 'R_037.jpeg', 'R_392.jpeg', 'R_186.jpeg', 'R_327.jpeg', 'R_320.jpeg', 'R_246.jpeg', 'R_488.jpeg', 'R_168.jpeg', 'R_190.jpeg', 'R_314.jpeg', 'R_389.jpeg', 'R_307.jpeg', 'R_429.jpeg', 'R_068.jpeg', 'R_316.jpeg', 'R_428.jpeg', 'R_436.jpeg', 'R_140.jpeg', 'R_383.jpeg', 'R_036.jpeg', 'R_050.jpeg', 'R_287.jpeg', 'R_387.jpeg', 'R_204.jpeg', 'R_345.jpeg', 'R_058.jpeg', 'R_394.jpeg', 'R_189.jpeg', 'R_132.jpeg', 'R_333.jpeg', 'R_332.jpeg', 'R_084.jpeg', 'R_107.jpeg', 'R_045.jpeg', 'R_112.jpeg', 'R_211.jpeg', 'R_435.jpeg', 'R_418.jpeg', 'R_035.jpeg', 'R_104.jpeg', 'R_276.jpeg', 'R_131.jpeg', 'R_079.jpeg', 'R_118.jpeg', 'R_467.jpeg', 'R_404.jpeg', 'R_465.jpeg', 'R_417.jpeg', 'R_153.jpeg', 'R_290.jpeg', 'R_071.jpeg', 'R_125.jpeg', 'R_431.jpeg', 'R_200.jpeg', 'R_098.jpeg', 'R_282.jpeg', 'R_121.jpeg', 'R_184.jpeg', 'R_484.jpeg', 'R_382.jpeg', 'R_312.jpeg', 'R_294.jpeg', 'R_169.jpeg', 'R_243.jpeg', 'R_309.jpeg', 'R_426.jpeg', 'R_379.jpeg', 'R_263.jpeg', 'R_486.jpeg', 'R_076.jpeg', 'R_238.jpeg', 'R_110.jpeg', 'R_447.jpeg', 'R_038.jpeg', 'R_397.jpeg', 'R_055.jpeg', 'R_082.jpeg', 'R_405.jpeg', 'R_139.jpeg', 'R_149.jpeg', 'R_025.jpeg', 'R_377.jpeg', 'R_014.jpeg', 'R_355.jpeg', 'R_466.jpeg', 'R_286.jpeg', 'R_003.jpeg', 'R_054.jpeg', 'R_205.jpeg', 'R_085.jpeg', 'R_313.jpeg', 'R_390.jpeg', 'R_398.jpeg', 'R_340.jpeg', 'R_232.jpeg', 'R_039.jpeg', 'R_176.jpeg', 'R_120.jpeg', 'R_460.jpeg', 'R_408.jpeg', 'R_499.jpeg', 'R_111.jpeg', 'R_171.jpeg', 'R_043.jpeg', 'R_490.jpeg', 'R_372.jpeg', 'R_063.jpeg', 'R_463.jpeg', 'R_481.jpeg', 'R_240.jpeg', 'R_105.jpeg', 'R_064.jpeg', 'R_349.jpeg', 'R_216.jpeg', 'R_148.jpeg', 'R_235.jpeg', 'R_413.jpeg', 'R_134.jpeg', 'R_356.jpeg', 'R_455.jpeg', 'R_342.jpeg', 'R_357.jpeg', 'R_075.jpeg', 'R_425.jpeg', 'R_317.jpeg', 'R_222.jpeg', 'R_053.jpeg', 'R_301.jpeg', 'R_391.jpeg', 'R_262.jpeg', 'R_214.jpeg', 'R_219.jpeg', 'R_128.jpeg', 'R_106.jpeg', 'R_495.jpeg', 'R_281.jpeg', 'R_241.jpeg', 'R_164.jpeg', 'R_162.jpeg', 'R_270.jpeg', 'R_306.jpeg', 'R_077.jpeg', 'R_433.jpeg', 'R_018.jpeg', 'R_089.jpeg', 'R_319.jpeg', 'R_198.jpeg', 'R_274.jpeg', 'R_044.jpeg', 'R_291.jpeg', 'R_031.jpeg', 'R_227.jpeg', 'R_074.jpeg', 'R_180.jpeg', 'R_033.jpeg', 'R_051.jpeg', 'R_195.jpeg', 'R_492.jpeg', 'R_163.jpeg', 'R_347.jpeg', 'R_253.jpeg', 'R_371.jpeg', 'R_300.jpeg', 'R_155.jpeg', 'R_016.jpeg', 'R_260.jpeg', 'R_296.jpeg', 'R_329.jpeg', 'R_144.jpeg', 'R_052.jpeg', 'R_410.jpeg', 'R_185.jpeg', 'R_258.jpeg', 'R_013.jpeg', 'R_305.jpeg', 'R_022.jpeg', 'R_231.jpeg', 'R_275.jpeg', 'R_129.jpeg', 'R_001.jpeg', 'R_217.jpeg', 'R_010.jpeg', 'R_207.jpeg', 'R_091.jpeg', 'R_023.jpeg', 'R_092.jpeg', 'R_360.jpeg', 'R_188.jpeg', 'R_056.jpeg', 'R_061.jpeg', 'R_249.jpeg', 'R_029.jpeg', 'R_142.jpeg', 'R_474.jpeg', 'R_103.jpeg', 'R_452.jpeg', 'R_097.jpeg', 'R_251.jpeg', 'R_457.jpeg', 'R_409.jpeg', 'R_102.jpeg', 'R_224.jpeg', 'R_002.jpeg', 'R_065.jpeg', 'R_483.jpeg', 'R_173.jpeg', 'R_236.jpeg', 'R_442.jpeg', 'R_007.jpeg', 'R_124.jpeg', 'R_402.jpeg', 'R_485.jpeg', 'R_181.jpeg', 'R_192.jpeg', 'R_310.jpeg', 'R_060.jpeg', 'R_220.jpeg', 'R_359.jpeg', 'R_034.jpeg', 'R_464.jpeg', 'R_380.jpeg', 'R_225.jpeg', 'R_024.jpeg', 'R_449.jpeg', 'R_147.jpeg', 'R_335.jpeg', 'R_233.jpeg', 'R_284.jpeg', 'R_400.jpeg', 'R_365.jpeg', 'R_099.jpeg', 'R_311.jpeg', 'R_072.jpeg', 'R_343.jpeg', 'R_441.jpeg', 'R_042.jpeg', 'R_259.jpeg', 'R_427.jpeg', 'R_288.jpeg', 'R_123.jpeg', 'R_196.jpeg', 'R_067.jpeg', 'R_245.jpeg', 'R_448.jpeg', 'R_364.jpeg', 'R_424.jpeg', 'R_244.jpeg', 'R_280.jpeg', 'R_482.jpeg', 'R_480.jpeg', 'R_271.jpeg', 'R_385.jpeg', 'R_046.jpeg', 'R_059.jpeg', 'R_273.jpeg', 'R_298.jpeg', 'R_498.jpeg', 'R_497.jpeg', 'R_500.jpeg', 'R_215.jpeg', 'R_202.jpeg', 'R_304.jpeg', 'R_229.jpeg', 'R_443.jpeg', 'R_047.jpeg', 'R_444.jpeg', 'R_100.jpeg', 'R_167.jpeg', 'R_119.jpeg', 'R_165.jpeg', 'R_336.jpeg', 'R_237.jpeg', 'R_354.jpeg', 'R_094.jpeg', 'R_210.jpeg']\n",
+            "Files in /content/dataset/images/serve: ['S_189.jpeg', 'S_206.jpeg', 'S_427.jpeg', 'S_192.jpeg', 'S_032.jpeg', 'S_439.jpeg', 'S_473.jpeg', 'S_176.jpeg', 'S_274.jpeg', 'S_301.jpeg', 'S_130.jpeg', 'S_133.jpeg', 'S_216.jpeg', 'S_220.jpeg', 'S_033.jpeg', 'S_407.jpeg', 'S_051.jpeg', 'S_147.jpeg', 'S_134.jpeg', 'S_105.jpeg', 'S_075.jpeg', 'S_201.jpeg', 'S_464.jpeg', 'S_496.jpeg', 'S_325.jpeg', 'S_410.jpeg', 'S_382.jpeg', 'S_097.jpeg', 'S_065.jpeg', 'S_457.jpeg', 'S_355.jpeg', 'S_443.jpeg', 'S_289.jpeg', 'S_396.jpeg', 'S_467.jpeg', 'S_478.jpeg', 'S_207.jpeg', 'S_106.jpeg', 'S_024.jpeg', 'S_188.jpeg', 'S_020.jpeg', 'S_225.jpeg', 'S_213.jpeg', 'S_169.jpeg', 'S_098.jpeg', 'S_331.jpeg', 'S_449.jpeg', 'S_023.jpeg', 'S_244.jpeg', 'S_334.jpeg', 'S_314.jpeg', 'S_284.jpeg', 'S_247.jpeg', 'S_445.jpeg', 'S_157.jpeg', 'S_210.jpeg', 'S_178.jpeg', 'S_296.jpeg', 'S_212.jpeg', 'S_317.jpeg', 'S_168.jpeg', 'S_204.jpeg', 'S_067.jpeg', 'S_193.jpeg', 'S_264.jpeg', 'S_102.jpeg', 'S_315.jpeg', 'S_326.jpeg', 'S_171.jpeg', 'S_369.jpeg', 'S_144.jpeg', 'S_116.jpeg', 'S_267.jpeg', 'S_471.jpeg', 'S_259.jpeg', 'S_494.jpeg', 'S_068.jpeg', 'S_491.jpeg', 'S_016.jpeg', 'S_238.jpeg', 'S_455.jpeg', 'S_338.jpeg', 'S_469.jpeg', 'S_203.jpeg', 'S_029.jpeg', 'S_310.jpeg', 'S_309.jpeg', 'S_291.jpeg', 'S_113.jpeg', 'S_393.jpeg', 'S_353.jpeg', 'S_093.jpeg', 'S_061.jpeg', 'S_346.jpeg', 'S_436.jpeg', 'S_500.jpeg', 'S_014.jpeg', 'S_101.jpeg', 'S_030.jpeg', 'S_476.jpeg', 'S_356.jpeg', 'S_159.jpeg', 'S_251.jpeg', 'S_295.jpeg', 'S_403.jpeg', 'S_108.jpeg', 'S_044.jpeg', 'S_479.jpeg', 'S_418.jpeg', 'S_488.jpeg', 'S_463.jpeg', 'S_140.jpeg', 'S_217.jpeg', 'S_342.jpeg', 'S_154.jpeg', 'S_221.jpeg', 'S_199.jpeg', 'S_183.jpeg', 'S_432.jpeg', 'S_423.jpeg', 'S_037.jpeg', 'S_408.jpeg', 'S_406.jpeg', 'S_041.jpeg', 'S_191.jpeg', 'S_240.jpeg', 'S_219.jpeg', 'S_297.jpeg', 'S_298.jpeg', 'S_103.jpeg', 'S_281.jpeg', 'S_313.jpeg', 'S_174.jpeg', 'S_088.jpeg', 'S_322.jpeg', 'S_228.jpeg', 'S_361.jpeg', 'S_156.jpeg', 'S_091.jpeg', 'S_490.jpeg', 'S_001.jpeg', 'S_121.jpeg', 'S_271.jpeg', 'S_073.jpeg', 'S_492.jpeg', 'S_190.jpeg', 'S_122.jpeg', 'S_413.jpeg', 'S_285.jpeg', 'S_370.jpeg', 'S_151.jpeg', 'S_269.jpeg', 'S_180.jpeg', 'S_498.jpeg', 'S_031.jpeg', 'S_337.jpeg', 'S_493.jpeg', 'S_252.jpeg', 'S_249.jpeg', 'S_363.jpeg', 'S_185.jpeg', 'S_027.jpeg', 'S_072.jpeg', 'S_071.jpeg', 'S_278.jpeg', 'S_341.jpeg', 'S_136.jpeg', 'S_109.jpeg', 'S_111.jpeg', 'S_146.jpeg', 'S_344.jpeg', 'S_127.jpeg', 'S_495.jpeg', 'S_292.jpeg', 'S_409.jpeg', 'S_256.jpeg', 'S_053.jpeg', 'S_349.jpeg', 'S_165.jpeg', 'S_148.jpeg', 'S_441.jpeg', 'S_286.jpeg', 'S_054.jpeg', 'S_312.jpeg', 'S_177.jpeg', 'S_422.jpeg', 'S_112.jpeg', 'S_104.jpeg', 'S_202.jpeg', 'S_412.jpeg', 'S_386.jpeg', 'S_128.jpeg', 'S_064.jpeg', 'S_465.jpeg', 'S_246.jpeg', 'S_398.jpeg', 'S_303.jpeg', 'S_448.jpeg', 'S_227.jpeg', 'S_357.jpeg', 'S_391.jpeg', 'S_129.jpeg', 'S_010.jpeg', 'S_172.jpeg', 'S_260.jpeg', 'S_243.jpeg', 'S_241.jpeg', 'S_352.jpeg', 'S_155.jpeg', 'S_126.jpeg', 'S_290.jpeg', 'S_052.jpeg', 'S_452.jpeg', 'S_084.jpeg', 'S_400.jpeg', 'S_184.jpeg', 'S_166.jpeg', 'S_131.jpeg', 'S_383.jpeg', 'S_404.jpeg', 'S_197.jpeg', 'S_139.jpeg', 'S_163.jpeg', 'S_450.jpeg', 'S_318.jpeg', 'S_431.jpeg', 'S_161.jpeg', 'S_379.jpeg', 'S_150.jpeg', 'S_119.jpeg', 'S_447.jpeg', 'S_446.jpeg', 'S_096.jpeg', 'S_475.jpeg', 'S_307.jpeg', 'S_090.jpeg', 'S_007.jpeg', 'S_321.jpeg', 'S_195.jpeg', 'S_272.jpeg', 'S_302.jpeg', 'S_079.jpeg', 'S_332.jpeg', 'S_419.jpeg', 'S_261.jpeg', 'S_362.jpeg', 'S_288.jpeg', 'S_484.jpeg', 'S_308.jpeg', 'S_345.jpeg', 'S_008.jpeg', 'S_162.jpeg', 'S_160.jpeg', 'S_222.jpeg', 'S_045.jpeg', 'S_006.jpeg', 'S_360.jpeg', 'S_374.jpeg', 'S_038.jpeg', 'S_123.jpeg', 'S_179.jpeg', 'S_046.jpeg', 'S_305.jpeg', 'S_487.jpeg', 'S_348.jpeg', 'S_327.jpeg', 'S_200.jpeg', 'S_329.jpeg', 'S_234.jpeg', 'S_132.jpeg', 'S_107.jpeg', 'S_293.jpeg', 'S_242.jpeg', 'S_208.jpeg', 'S_402.jpeg', 'S_416.jpeg', 'S_426.jpeg', 'S_380.jpeg', 'S_076.jpeg', 'S_358.jpeg', 'S_175.jpeg', 'S_262.jpeg', 'S_050.jpeg', 'S_279.jpeg', 'S_444.jpeg', 'S_343.jpeg', 'S_153.jpeg', 'S_069.jpeg', 'S_055.jpeg', 'S_048.jpeg', 'S_481.jpeg', 'S_399.jpeg', 'S_223.jpeg', 'S_339.jpeg', 'S_255.jpeg', 'S_388.jpeg', 'S_485.jpeg', 'S_282.jpeg', 'S_028.jpeg', 'S_063.jpeg', 'S_417.jpeg', 'S_456.jpeg', 'S_387.jpeg', 'S_468.jpeg', 'S_022.jpeg', 'S_143.jpeg', 'S_499.jpeg', 'S_372.jpeg', 'S_470.jpeg', 'S_367.jpeg', 'S_460.jpeg', 'S_397.jpeg', 'S_080.jpeg', 'S_021.jpeg', 'S_320.jpeg', 'S_231.jpeg', 'S_385.jpeg', 'S_232.jpeg', 'S_270.jpeg', 'S_319.jpeg', 'S_480.jpeg', 'S_453.jpeg', 'S_395.jpeg', 'S_425.jpeg', 'S_287.jpeg', 'S_042.jpeg', 'S_187.jpeg', 'S_082.jpeg', 'S_373.jpeg', 'S_170.jpeg', 'S_152.jpeg', 'S_110.jpeg', 'S_125.jpeg', 'S_389.jpeg', 'S_135.jpeg', 'S_047.jpeg', 'S_336.jpeg', 'S_482.jpeg', 'S_368.jpeg', 'S_394.jpeg', 'S_120.jpeg', 'S_405.jpeg', 'S_235.jpeg', 'S_173.jpeg', 'S_142.jpeg', 'S_462.jpeg', 'S_117.jpeg', 'S_442.jpeg', 'S_257.jpeg', 'S_164.jpeg', 'S_205.jpeg', 'S_233.jpeg', 'S_141.jpeg', 'S_040.jpeg', 'S_328.jpeg', 'S_237.jpeg', 'S_049.jpeg', 'S_311.jpeg', 'S_433.jpeg', 'S_013.jpeg', 'S_149.jpeg', 'S_277.jpeg', 'S_459.jpeg', 'S_100.jpeg', 'S_245.jpeg', 'S_440.jpeg', 'S_099.jpeg', 'S_086.jpeg', 'S_472.jpeg', 'S_012.jpeg', 'S_378.jpeg', 'S_081.jpeg', 'S_137.jpeg', 'S_196.jpeg', 'S_489.jpeg', 'S_371.jpeg', 'S_474.jpeg', 'S_118.jpeg', 'S_158.jpeg', 'S_214.jpeg', 'S_306.jpeg', 'S_019.jpeg', 'S_250.jpeg', 'S_074.jpeg', 'S_145.jpeg', 'S_294.jpeg', 'S_458.jpeg', 'S_265.jpeg', 'S_384.jpeg', 'S_017.jpeg', 'S_434.jpeg', 'S_350.jpeg', 'S_062.jpeg', 'S_138.jpeg', 'S_421.jpeg', 'S_114.jpeg', 'S_011.jpeg', 'S_239.jpeg', 'S_429.jpeg', 'S_059.jpeg', 'S_089.jpeg', 'S_057.jpeg', 'S_437.jpeg', 'S_381.jpeg', 'S_268.jpeg', 'S_056.jpeg', 'S_039.jpeg', 'S_335.jpeg', 'S_354.jpeg', 'S_194.jpeg', 'S_273.jpeg', 'S_266.jpeg', 'S_003.jpeg', 'S_283.jpeg', 'S_025.jpeg', 'S_414.jpeg', 'S_094.jpeg', 'S_276.jpeg', 'S_365.jpeg', 'S_497.jpeg', 'S_376.jpeg', 'S_364.jpeg', 'S_009.jpeg', 'S_182.jpeg', 'S_415.jpeg', 'S_026.jpeg', 'S_167.jpeg', 'S_483.jpeg', 'S_115.jpeg', 'S_359.jpeg', 'S_254.jpeg', 'S_005.jpeg', 'S_438.jpeg', 'S_477.jpeg', 'S_083.jpeg', 'S_340.jpeg', 'S_092.jpeg', 'S_347.jpeg', 'S_375.jpeg', 'S_095.jpeg', 'S_461.jpeg', 'S_330.jpeg', 'S_230.jpeg', 'S_258.jpeg', 'S_066.jpeg', 'S_411.jpeg', 'S_215.jpeg', 'S_253.jpeg', 'S_424.jpeg', 'S_435.jpeg', 'S_198.jpeg', 'S_275.jpeg', 'S_430.jpeg', 'S_034.jpeg', 'S_018.jpeg', 'S_229.jpeg', 'S_390.jpeg', 'S_248.jpeg', 'S_209.jpeg', 'S_333.jpeg', 'S_454.jpeg', 'S_236.jpeg', 'S_420.jpeg', 'S_300.jpeg', 'S_366.jpeg', 'S_451.jpeg', 'S_401.jpeg', 'S_058.jpeg', 'S_043.jpeg', 'S_085.jpeg', 'S_486.jpeg', 'S_181.jpeg', 'S_036.jpeg', 'S_077.jpeg', 'S_078.jpeg', 'S_004.jpeg', 'S_299.jpeg', 'S_087.jpeg', 'S_002.jpeg', 'S_304.jpeg', 'S_035.jpeg', 'S_015.jpeg', 'S_280.jpeg', 'S_428.jpeg', 'S_186.jpeg', 'S_377.jpeg', 'S_124.jpeg', 'S_324.jpeg', 'S_070.jpeg', 'S_323.jpeg', 'S_224.jpeg', 'S_392.jpeg', 'S_060.jpeg', 'S_316.jpeg', 'S_351.jpeg', 'S_211.jpeg', 'S_226.jpeg', 'S_466.jpeg', 'S_218.jpeg', 'S_263.jpeg']\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from tensorflow.keras.preprocessing import image\n",
+        "import numpy as np\n",
+        "\n",
+        "# List of class names corresponding to your model's output labels\n",
+        "class_names = ['Forehand', 'Backhand', 'Serve', 'Volley', 'Smash']  # Replace with your actual class names\n",
+        "\n",
+        "# Load the image from your local machine\n",
+        "img_path = '/content/serve.jpeg'  # Replace with the path to your image\n",
+        "img = image.load_img(img_path, target_size=(224, 224))  # Resize the image to the target size of your model\n",
+        "\n",
+        "# Convert the image to a numpy array\n",
+        "img_array = image.img_to_array(img)\n",
+        "\n",
+        "# Normalize the image (if you used normalization during training)\n",
+        "img_array = img_array / 255.0  # Example for scaling pixel values to [0, 1]\n",
+        "\n",
+        "# Add an extra dimension to match the input shape of the model (batch size of 1)\n",
+        "img_array = np.expand_dims(img_array, axis=0)\n",
+        "\n",
+        "# Predict the class\n",
+        "predictions = model.predict(img_array)\n",
+        "\n",
+        "# Get the predicted class label\n",
+        "predicted_class_index = np.argmax(predictions)\n",
+        "\n",
+        "# Print the predicted tennis move\n",
+        "print(f\"Predicted tennis move: {class_names[predicted_class_index]}\")\n",
+        "\n",
+        "\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WDwaiIlcMTfg",
+        "outputId": "8e1ae2d0-1b3b-4b26-a9b8-24789be4214f"
+      },
+      "execution_count": 28,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[1m1/1\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 51ms/step\n",
+            "Predicted tennis move: Forehand\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
